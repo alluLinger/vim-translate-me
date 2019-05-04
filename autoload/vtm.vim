@@ -25,7 +25,7 @@ endif
 " note: this must be outside the function!!!
 let s:py_file_path = expand('<sfile>:p:h') . '/source/'
 
-" bing api only requires app secret key
+" bing and yandex api only requires app secret key
 let s:api_key_secret = {
     \ 'baidu': [
         \ g:vtm_baidu_app_key,
@@ -38,6 +38,10 @@ let s:api_key_secret = {
     \ 'bing': [
         \ 'null',
         \ g:vtm_bing_app_secret_key
+    \ ],
+    \ 'yandex': [
+        \ 'null',
+        \ g:vtm_yandex_app_secret_key
     \ ]
     \ }
 
@@ -372,14 +376,19 @@ function! vtm#Translate(...) abort
     endif
 
     let type = a:2
-    let py_file = s:py_file_path . api . '.py'
+    let py_file = s:py_file_path . 'vtm.py'
     let word = substitute(word, '[\n\|\r]\+', '. ', 'g')
 
     let cmd = s:vtm_py_version . ' ' . py_file
+        \ . ' --api '       . api
         \ . ' --appKey '    . s:api_key_secret[api][0]
         \ . ' --appSecret ' . s:api_key_secret[api][1]
         \ . ' --word '      . shellescape('"' . word . '"')
         \ . ' --toLang '    . g:vtm_default_to_lang
+        \ . ' --proxyHostname ' . g:vtm_proxy_hostname
+        \ . ' --proxyPort '     . g:vtm_proxy_port
+        \ . ' --proxyUsername ' . g:vtm_proxy_username
+        \ . ' --proxyPassword ' . g:vtm_proxy_password
 
     call s:JobStart(cmd, type)
 endfunction

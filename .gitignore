@@ -5,8 +5,8 @@ tmp.*
 *.o
 *.out
 *.log
-/doc/tags
-/doc/tags-cn
+tags
+tags-cn
 .idea/
 /.idea
 build/
