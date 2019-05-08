@@ -3,6 +3,8 @@
 " @Last Modified by: voldikss
 " @Last Modified time: 2019-04-28 13:44:20
 
+" todo: separate into multi files
+
 if executable('python3')
     let s:vtm_py_version = 'python3'
 elseif executable('python')
@@ -227,6 +229,7 @@ function! s:ClosePopup() abort
     if popup_winnr != 0
         execute popup_winnr . 'wincmd c'
     endif
+    echomsg 'ClosePopup'
     autocmd! VtmClosePopup * <buffer>
 endfunction
 
@@ -317,16 +320,43 @@ function! s:Handler(...) abort
     endif
 endfunction
 
+" todo
+if has('nvim')
+    function! s:OnOuputNvim(type, job, data, event)
+        " gathering data into output_data ...
+        " call extend(s:output_data....)
+    endfunction
+
+    function! s:OnExitNvim(type, job, code, event)
+        " display output_data
+        " call s:Start....
+        " empty output_data
+        " let s:output_data = []
+    endfunction
+else
+    " same as nvim...
+    function! s:OnOuputVim(type, event, ch, msg)
+        
+    endfunction
+
+    function! s:OnExitVim(type, ch, code)
+        
+    endfunction
+endif
+
 function! s:JobStart(cmd, type) abort
     if s:job_cmd == 'jobstart'
         let callbacks = {
-            \ 'on_stdout': function('s:Handler', [a:type]),
-            \ 'on_stderr': function('s:Handler', [a:type])
+            \ 'on_stdout': function('s:OnOuputNvim', [a:type]),
+            \ 'on_stderr': function('s:OnOuputNvim', [a:type]),
+            \ 'on_exit': function('s:OnExitNvim')
         \ }
+        call jobstart(a:cmd, callbacks)
     else
         let callbacks = {
-            \ 'out_cb': function('s:Handler', [a:type, 'stdout']),
-            \ 'err_cb': function('s:Handler', [a:type, 'stderr']),
+            \ 'out_cb': function('s:OnOuputVim', [a:type, 'stdout']),
+            \ 'err_cb': function('s:OnOuputVim', [a:type, 'stderr']),
+            \ 'exit_cb': function('s:OnExitVim', [a:type])
             \ 'out_io': 'pipe',
             \ 'err_io': 'out',
             \ 'in_io': 'null',
@@ -334,9 +364,8 @@ function! s:JobStart(cmd, type) abort
             \ 'err_mode': 'nl',
             \ 'timeout': '2000'
         \ }
+        call job_start(a:cmd, callbacks)
     endif
-
-    call function(s:job_cmd, [a:cmd, callbacks])()
 endfunction
 
 function! vtm#Translate(args, type) abort
